@@ -1,15 +1,15 @@
- DSCRETE: Automatic Rendering of Forensic Information
-  from Memory Images via Application Logic Reuse
+## DSCRETE: Automatic Rendering of Forensic Information from Memory Images via Application Logic Reuse
 
- Brendan Saltaformaggio, bsaltafo@cs.purdue.edu 
+ Brendan Saltaformaggio
 
-Foreword:
+### Foreword:
 Please remember that this is a research prototype and thus you
 *should* expect to change makefile variables, dig through source
 code for error messages, and find some corner-case that I forgot
 to mention in this README. Before trying to use this tool, you
-should be very familiar with the DSCRETE paper. That said, I
-welcome any questions, comments, or suggestions --- feel free
+should be very familiar with the 
+[DSCRETE paper](https://www.usenix.org/system/files/conference/usenixsecurity14/sec14-paper-saltaformaggio.pdf).
+That said, I welcome any questions, comments, or suggestions --- feel free
 to email me. :)
 
 To help anyone who wants to try to use DSCRETE, I have also included a
@@ -17,10 +17,12 @@ full test case with step-by-step instructions in dscrete_VM.tar.gz
 (available for download on my website under Publications).
 I verified that this test worked on my system before uploading it
 with the DSCRETE source code. Note: You should be very familiar
-with the DSCRETE paper and this README before trying to run DSCRETE.
+with the
+[DSCRETE paper](https://www.usenix.org/system/files/conference/usenixsecurity14/sec14-paper-saltaformaggio.pdf)
+and this README before trying to run DSCRETE.
 
 
-Requirements:
+### Requirements:
 Pin Binary Analysis Framework - The tool was
  developed with Pin version 2.13, and not tested
  with any other versions.
@@ -40,7 +42,7 @@ versions will be safe, but may require some tweaks to the
 code base. 
 
 
-Building the system:
+### Building the system:
 There are three programs which need to be compiled: pin_slicer,
 analysis, and pin_scanner. Each of these are in their own directory
 and have their own makefiles. You *should* look at the makefiles
@@ -88,9 +90,9 @@ and some manual effort.
 
 
 
-Running the system:
+## Running the system:
 
-Step 1: Collecting a Dynamic Execution Trace:
+### Step 1: Collecting a Dynamic Execution Trace:
 
 The first step of DSCRETE is to collect a dynamic slice of the
 binary under investigation. This is done via the run_slice.sh
@@ -103,7 +105,8 @@ Executing your customized run_slice.sh should start the
 libforensixslicing.so Pin tool collecting a dynamic 
 execution trace.
 
-Some notes about slicing:
+### Some notes about slicing:
+
 Models:
 The accuracy of the slicer depends heavily on its ability to
 model external library functions invoked by the binary under
@@ -147,16 +150,18 @@ this file is as follows: a function name (e.g., fwrite), the
 "@" sign, and the library name holding that function (e.g.,
 libc.so). An example of this file would look like:
 
+~~~~
 write@libc.so
 fwrite@libc.so
 _IO_fwrite@libc.so
+~~~~
 
 This instructs DSCRETE to treat these as output functions,
 one of which is the F function we wish to find.
 
 
 
-Step 2: Computing a Backwards Slice:
+## Step 2: Computing a Backwards Slice:
 
 After you finish executing the binary under investigation
 with the dynamic slicer, several output files will be put into
@@ -169,6 +174,7 @@ function invocations and the values of those function's arguments
 
 The listing of external functions will look similar to this example:
 
+~~~~
 =================================================
 Routine: extern size_t fwrite (__const void *__restrict __ptr, size_t __size,
  size_t __n, FILE *__restrict __s) | Img: libc.so
@@ -179,6 +185,8 @@ ARG 2 0x7f33aee08327 1 REG_DEP 17 (rdx) 0x000000210 [........]
 ARG 0 0x7f33aee08334 1 REG_DEP 12 (rdi) 0x000734520 [ Es.....]
 0x800000000 37890 MEM_DEP 0x000734520 0x464a1000e0ffd8ff [......JF]
 0x800000000 37890 MEM_DEP 0x000734528 0x4800010101004649 [IF.....H]
+~~~~
+
 
 Copy the lines of this file which show the forensically interesting data
 you wish to slice upon into the empty bcrit file in Vim, and save the
@@ -186,8 +194,10 @@ file. If a line you wish to copy begins with "ARG #" do not copy
 the "ARG #".
 
 For the example above, we may only copy:
+~~~~
 0x7f33aee08334 1 REG_DEP 12 (rdi) 0x000734520 [ Es.....]
 0x800000000 37890 MEM_DEP 0x000734520 0x464a1000e0ffd8ff [......JF]
+~~~~
 
 Save the bcrit file (that you copied the lines into) and close Vim.
 Note that sometimes DSCRETE's closure point candidate identification
@@ -203,20 +213,26 @@ test entry point candidates.
 
 
 
-Step 3: Building a Scanner+Renderer tool:
+## Step 3: Building a Scanner+Renderer tool:
 
 Note: Be sure you have libforensixscanner.so compiled
 with BUILD_SCANNER defined!
 
 To build a Scanner+Renderer tool you first must modify the 
 run_build.sh script. The following variables should be changed:
+
 PIN_DIR = like before, your pin installation
+
 SCANNER_DIR = like before, the parent directory of the
   pin_scanner directory
+  
 MEM_INFO = The Info file from Step 2
+
 MEM_DUMP = The Dump file from Step 2
+
 PERCENT = The amount of the slice to consider (this is the
   "p" percent from the DSCRETE paper).
+  
 You will also need to add the binary you are inspecting
 to the Pin command line at the bottom of the script.
 Note that the script will not execute this command,
@@ -231,10 +247,15 @@ file to be *obviously different*.
 Before running run_build.sh, you should mark the sections of
 the Info File from Step 2 which DSCRETE should use for testing.
 The Info File will contain lines similar to this:
+~~~~
 [heap]    cd0000->10162176->563000
+~~~~
+
 To mark this section for scanning, add "^scan^" to the front
 of the line in the Info File, such as:
+~~~~
 ^scan^[heap]    cd0000->10162176->563000
+~~~~
 
 Running run_build.sh will first parse the output from Step 2
 and locate which function/argument you chose for the bcrit
@@ -256,7 +277,8 @@ man be determined via the return value of the function.
 the bcrit file and its length in memory can be determined 
 via the value of arg number "#" (the second "#").
 
-Recall the example __write.out file from Step 2:
+### Recall the example __write.out file from Step 2:
+~~~~
 =================================================
 Routine: extern size_t fwrite (__const void *__restrict __ptr, size_t __size,
  size_t __n, FILE *__restrict __s) | Img: libc.so
@@ -267,14 +289,18 @@ ARG 2 0x7f33aee08327 1 REG_DEP 17 (rdx) 0x000000210 [........]
 ARG 0 0x7f33aee08334 1 REG_DEP 12 (rdi) 0x000734520 [ Es.....]
 0x800000000 37890 MEM_DEP 0x000734520 0x464a1000e0ffd8ff [......JF]
 0x800000000 37890 MEM_DEP 0x000734528 0x4800010101004649 [IF.....H]
+~~~~
+
 
 We can see that the buffer is pointed to by ARG 0 and the length of
 this buffer is given in ARG 2. Thus run_build.sh will present the
 following file for you to modify:
 
+~~~~
 0x8a337 /lib/libc.so
 Hint: Arg 0 matches! Suggest: "0s" OR "0r" OR "0a#?" #? is the number of the length arg (Args start at 0!).
 fwrite
+~~~~
 
 We can see from the "Hint" line that DSCRETE matched ARG 0 to the
 buffer you copied to the bcrit file, but DSCRETE cannot determine
@@ -284,9 +310,11 @@ the "Hint" line to "0a2" meaning "the buffer is pointed to
 by ARG 0 and its length is in ARG 2." The saved file should 
 look like this:
 
+~~~~
 0x8a337 lib/libc.so
 0a2
 fwrite
+~~~~
 
 Saving this file will resume run_build.sh.
 
@@ -306,9 +334,13 @@ be mapped back into memory, but this often fails. Please help
 DSCRETE out by adding a "!" to the front of each line which it
 may not need to map back into memory. For example:
 We probably do not need to remap the VDSO. So the line:
+~~~~
 [vdso] 7fff621ff000->4096->4a37b000
+~~~~
 should be changed to:
+~~~~
 ![vdso] 7fff621ff000->4096->4a37b000
+~~~~
 
 Keep rerunning the Pin command and if it segfaults again, then
 add "!" to more lines. Iterate this process until
@@ -335,6 +367,7 @@ each closure point candidate. This file will contain
 textual output produced by each candidate. This file will
 contain entries such as:
 
+~~~~
 20===== Scanning from de7c20:
 1 0 obj
 <<
@@ -342,6 +375,7 @@ contain entries such as:
 /Parent 4 0 R
 /Resources 11 0 R
 /MediaBox [ 0 0 612 792 ]
+~~~~
 
 It is often useful for this data to be written to separate files
 for each candidate (e.g., when testing JPG data it would
@@ -353,8 +387,10 @@ of each candidate to be directed to a file in the
 scan_output_files directory. In this case, the __matches.out
 file will look like this:
 
+~~~~
 9===== Scanning from e19bc0:
 ./scan_output_files/s_19_0xe19bc0.data
+~~~~
 
 You should (as the DSCRETE paper says) find the candidates which
 result in the same output you marked in Step 2. When such a
@@ -366,7 +402,7 @@ Scanner+Renderer tool.
 
 
 
-Step 4: Memory Image Scanning:
+## Step 4: Memory Image Scanning:
 
 Note: Be sure you have libforensixscanner.so compiled
 with BUILD_SCANNER **NOT** defined!
