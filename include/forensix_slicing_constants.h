@@ -1,0 +1,17 @@
+#ifndef FORENSIX_SLICING_CONSTANTS_H
+#define FORENSIX_SLICING_CONSTANTS_H
+
+#define CFG_FILE_NAME "cfg.info"
+#define DEBUG_FILE_NAME "debug.info"
+#define HEAP_DUMP_DIR "heap_dumps"
+
+#define MODEL_INST_ADDR 0x800000000ULL
+#define MODEL_INST_NAME "__model__"
+
+#define ENTRY_INST_ADDR 0x900000010ULL
+#define ENTRY_INST_NAME "__entry__"
+
+#define EXIT_INST_ADDR  0x900000000ULL
+#define EXIT_INST_NAME  "__exit__"
+
+#endif // FORENSIX_SLICING_CONSTANTS_H
